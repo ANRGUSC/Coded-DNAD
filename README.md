@@ -70,7 +70,7 @@ The folder structure is:
 
 ## `sample_input` 
 This folder is required according to the Jupiter guidelines as well as for testing.
-Once can leave it as an empty directory.
+One can leave it as an empty directory.
 
 ## `config.json`
 According to Jupiter guideline, there MUST be a config.json file with an
@@ -85,7 +85,7 @@ In this, each entry is represented as follows:
 
 `<task_file>` is the name of the file to be run internally
 
-`<DAG_flag`> represents whether the task is part of the DAG. If yes, set it to be `True` otherwise `False`.
+`<DAG_flag`> represents whether the task is part of the DAG. If yes, set it to be `True` otherwise set it to be `False`.
 
 `<Arguments>` represents the arguments for the tasks that are not part of the DAG portion of the task-graph.
 
@@ -128,14 +128,6 @@ scheduler's random mapping.
 This file includes random mapping for the tasks that has no parent.
 For example, the given `input_node.txt` file randomly selects node4 for the `localpro` task.
 
-
-
-This file is required by the WAVE scheduler. This basically initiates the WAVE
-scheduler's random mapping. 
-This file includes random mapping for the tasks that has no parent.
-For example, the given `input_node.txt` file randomly selects node4 for the `localpro` task.
-
-
 ## `script`
 This folder contains all the executables related to the task graph.
 
@@ -164,9 +156,9 @@ that coordinates the coded/uncoded terasort analysis of the data among the Teras
 This folder contains all the script required to run Terasort worker tasks.
  
 ### `teradetector<SPLIT_ID>.py`
-As the terasort master and slave tasknodes are not directly part of the DAG,
-we have added this script to connect them to the DAG portion of the graph.
-This script dispatched the input data to the teramaster<SPLIT_ID> for processing
+As the terasort master and worker task nodes are not directly part of the DAG,
+we have added this extra task to connect them to the DAG portion of the graph.
+This script dispatches the input data to the teramaster<SPLIT_ID> for processing
 and collects the output of the analysis and pass it to the Fusion Center.
  
 ### `fusion_center<SPLIT_ID>.py`
