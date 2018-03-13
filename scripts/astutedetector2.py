@@ -1,11 +1,11 @@
 """
  * Copyright (c) 2017, Autonomous Networks Research Group. All rights reserved.
- *     contributors: 
+ *     contributors:
  *      Pranav Sakulkar, October 2017
  *      Jiatong Wang, October 2017
  *      Aleksandra Knezevic, October 2017
  *      Bhaskar Krishnamachari, October 2017
- *     Read license file in main directory for more details  
+ *     Read license file in main directory for more details
 """
 
 import sys
@@ -228,6 +228,14 @@ def task(filename, pathin, pathout):
     with open(os.path.join(pathout, num+'anomalies_astute2.log'), 'w') as writefile:
         for key, value in pktPerHost.items():
             writefile.write(key + '\n')
+
+    return [os.path.join(pathout, num+'anomalies_astute2.log')]
+def main():
+
+    filelist = '25merged_file2.ipsum'
+    outpath = os.path.join(os.path.dirname(__file__), "generated_files/")
+    outfile = task(filelist, outpath, outpath)
+    return outfile
 
 
 if __name__ == '__main__':

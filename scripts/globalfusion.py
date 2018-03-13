@@ -1,11 +1,11 @@
 """
  * Copyright (c) 2017, Autonomous Networks Research Group. All rights reserved.
- *     contributors: 
+ *     contributors:
  *      Pranak Sakulkar, October 2017
  *      Jiatong Wang, October 2017
  *      Aleksandra Knezevic, October 2017
  *      Bhaskar Krishnamachari, October 2017
- *     Read license file in main directory for more details  
+ *     Read license file in main directory for more details
 """
 
 import os
@@ -34,6 +34,15 @@ def task(filelist, pathin, pathout):
         output_set = output_set | anomaly_set
 
     write_files(output_set, num + 'global_anomalies.log', pathout)
+    return [os.path.join(pathout, num+'global_anomalies.log')]
+
+def main():
+
+    filelist = ['25fusion_center0.log', '25fusion_center1.log', '25fusion_center2.log']
+    outpath = os.path.join(os.path.dirname(__file__), "generated_files/")
+    outfile = task(filelist, outpath, outpath)
+    return outfile
+
 
 if __name__ == '__main__':
 
