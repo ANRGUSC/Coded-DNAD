@@ -57,13 +57,7 @@ import os
 import math
 from parseFile import readFile 
 
-NUM_BINS = 64
-THRESHOLD = 56
 
-all_nodes = os.environ["ALL_NODES"].split(":")
-all_nodes_ips = os.environ["ALL_NODES_IPS"].split(":")
-node_dict = dict(zip(all_nodes, all_nodes_ips))
-print(node_dict)
 
 # # Updates the config.json file
 # def updateConfig():
@@ -117,9 +111,13 @@ def task(filename, pathin, pathout):
     outFile.close()
 
 
-def main():
-    task('1botnet.ipsum', './', './output.out')
-
 if __name__ == '__main__':
-    main()
+    NUM_BINS = 64
+    THRESHOLD = 56
+
+    all_nodes = os.environ["ALL_NODES"].split(":")
+    all_nodes_ips = os.environ["ALL_NODES_IPS"].split(":")
+    node_dict = dict(zip(all_nodes, all_nodes_ips))
+    print(node_dict)
+    task('1botnet.ipsum', './', './output.out')
 

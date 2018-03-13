@@ -22,13 +22,6 @@ import os
 import time
 import json
 
-all_nodes = os.environ["ALL_NODES"].split(":")
-all_nodes_ips = os.environ["ALL_NODES_IPS"].split(":")
-node_dict = dict(zip(all_nodes, all_nodes_ips))
-# print(node_dict)
-configs = json.load(open('/centralized_scheduler/config.json'))
-tera_idx = configs['taskname_map'][os.environ['TASK']][2] 
-ssh_port = configs['ssh_port']
 
 
 def task(filename, pathin, pathout):
@@ -75,6 +68,15 @@ def task(filename, pathin, pathout):
 
 
 if __name__ == '__main__':
+    all_nodes = os.environ["ALL_NODES"].split(":")
+    all_nodes_ips = os.environ["ALL_NODES_IPS"].split(":")
+    node_dict = dict(zip(all_nodes, all_nodes_ips))
+    # print(node_dict)
+    configs = json.load(open('/centralized_scheduler/config.json'))
+    tera_idx = configs['taskname_map'][os.environ['TASK']][2] 
+    ssh_port = configs['ssh_port']
+
+
     oneName = 'data.txt'
     pathin = './'
     pathout = './'

@@ -46,10 +46,10 @@
  * THE SOFTWARE.
 """
 
-
-from xmlrpc.server import SimpleXMLRPCServer
-from xmlrpc.server import SimpleXMLRPCRequestHandler
-import xmlrpc.client as xmlrpclib
+import xmlrpc
+# from xmlrpc.server import SimpleXMLRPCServer
+# from xmlrpc.server import SimpleXMLRPCRequestHandler
+# import xmlrpc.client as xmlrpclib
 import socket
 import fcntl
 import struct
@@ -62,20 +62,7 @@ import re
 import os
 import signal
 
-configs = json.load(open('/centralized_scheduler/config.json'))
-encoding = np.array(configs['matrixConfigs']['encoding'])
 
-masterid = configs['taskname_map'][os.environ['TASK']][2] 
-
-k, n = encoding.shape
-
-READY_SLAVES_NEEDED = n
-CODING_COPIES_NEEDED = k 
-CHUNKS = configs['chunks'] 
-NUM_BINS = 64
-all_nodes = os.environ["ALL_NODES"].split(":")
-all_nodes_ips = os.environ["ALL_NODES_IPS"].split(":")
-node_dict = dict(zip(all_nodes, all_nodes_ips))
 
 
 def get_ip_address(ifname):
@@ -87,7 +74,7 @@ def get_ip_address(ifname):
     )[20:24])
 
 # Restrict to a particular path.
-class RequestHandler(SimpleXMLRPCRequestHandler):
+class RequestHandler(xmlrpc.server.SimpleXMLRPCRequestHandler):
     rpc_paths = ('/RPC2',)
 
 # Register an instance; all the methods of the instance are
@@ -140,7 +127,7 @@ class MasterServerProcess(multiprocessing.Process):
         multiprocessing.Process.__init__(self)
         #self.setDaemon(True)
         self.daemon = True
-        self.server = SimpleXMLRPCServer((myIP, int(myPortNum)),
+        self.server = xmlrpc.server.SimpleXMLRPCServer((myIP, int(myPortNum)),
                                      requestHandler=RequestHandler, allow_none=True)
         self.server.register_introspection_functions()
         
@@ -247,8 +234,6 @@ def generateReplicasAndSpeeds(means):
     speeds = 1.0 / np.array(replicas)
     return replicas, speeds
              
-def main():
-    matrixMulKernelMaster()
 
 def matrixMulKernelMaster(iteration=0, matrix=None, execTimes=None):
     #np.random.seed(1351)
@@ -274,9 +259,9 @@ def matrixMulKernelMaster(iteration=0, matrix=None, execTimes=None):
         for i in range(n):
             slave = node_dict['dftslave'+ str(masterid)+str(i)] + ':' + configs['PortNum']
             print(slave)
-            slaves.append(xmlrpclib.ServerProxy('http://' + slave, allow_none=True))
+            slaves.append(xmlrpc.client.xmlrpclib.ServerProxy('http://' + slave, allow_none=True))
 
-        localProxy = xmlrpclib.ServerProxy('http://' + myIP + ':' + myPortNum, allow_none=True)
+        localProxy = xmlrpc.client.xmlrpclib.ServerProxy('http://' + myIP + ':' + myPortNum, allow_none=True)
         
    
         if matrix is None: 
@@ -362,4 +347,18 @@ def matrixMulKernelMaster(iteration=0, matrix=None, execTimes=None):
     return result, computeTime, communication_time, decode_time
 
 if __name__ == '__main__':
-    main()
+    configs = json.load(open('/centralized_scheduler/config.json'))
+    encoding = np.array(configs['matrixConfigs']['encoding'])
+
+    masterid = configs['taskname_map'][os.environ['TASK']][2] 
+
+    k, n = encoding.shape
+
+    READY_SLAVES_NEEDED = n
+    CODING_COPIES_NEEDED = k 
+    CHUNKS = configs['chunks'] 
+    NUM_BINS = 64
+    all_nodes = os.environ["ALL_NODES"].split(":")
+    all_nodes_ips = os.environ["ALL_NODES_IPS"].split(":")
+    node_dict = dict(zip(all_nodes, all_nodes_ips))
+    matrixMulKernelMaster()

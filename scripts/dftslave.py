@@ -45,10 +45,10 @@
  * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS WITH 
  * THE SOFTWARE.
 """
-
-from xmlrpc.server import SimpleXMLRPCServer
-from xmlrpc.server import SimpleXMLRPCRequestHandler
-import xmlrpc.client as xmlrpclib
+import xmlrpc
+# from xmlrpc.server import SimpleXMLRPCServer
+# from xmlrpc.server import SimpleXMLRPCRequestHandler
+#import xmlrpc.client as xmlrpclib
 import socket
 import fcntl
 import struct
@@ -61,14 +61,6 @@ import os
 import re
 import math
 
-configs = json.load(open('/centralized_scheduler/config.json'))
-CHUNKS = configs['chunks'] 
-# MASTER_ID = sys.argv[1]
-# SLAVE_ID = sys.argv[2]
-
-all_nodes = os.environ["ALL_NODES"].split(":")
-all_nodes_ips = os.environ["ALL_NODES_IPS"].split(":")
-node_dict = dict(zip(all_nodes, all_nodes_ips))
 
 # newIps = os.environ['NODE_IPS'].split(':')
 # numSlaves = int(os.environ['TOTAL_SLAVES'])
@@ -94,7 +86,7 @@ def get_ip_address(ifname):
     )[20:24])
 
 # Restrict to a particular path.
-class RequestHandler(SimpleXMLRPCRequestHandler):
+class RequestHandler(xmlrpc.server.SimpleXMLRPCRequestHandler):
     rpc_paths = ('/RPC2',)
 
 # Register an instance; all the methods of the instance are
@@ -138,7 +130,7 @@ class SlaveServerProcess(multiprocessing.Process):
         multiprocessing.Process.__init__(self)
         #self.setDaemon(True)
         self.daemon = True
-        self.server = SimpleXMLRPCServer((myIP, int(myPortNum)),
+        self.server = xmlrpc.server.SimpleXMLRPCServer((myIP, int(myPortNum)),
                                      requestHandler=RequestHandler, allow_none=True)
         self.server.register_introspection_functions()
         
@@ -203,8 +195,8 @@ def matrixMulKernelSlave(MasterID, ID, TP, vector=None, matrix=None):
     server_process.start()
     print('starting slave server process %d...' % server_process.pid)
 
-    localProxy = xmlrpclib.ServerProxy('http://' + myIP + ':' + myPortNum, allow_none=True)
-    masterProxy = xmlrpclib.ServerProxy('http://' + master, allow_none=True)
+    localProxy = xmlrpc.client.xmlrpclib.ServerProxy('http://' + myIP + ':' + myPortNum, allow_none=True)
+    masterProxy = xmlrpc.client.xmlrpclib.ServerProxy('http://' + master, allow_none=True)
     chunks = CHUNKS
     idx = 0
     while True:
@@ -267,8 +259,20 @@ def matrixMulKernelSlave(MasterID, ID, TP, vector=None, matrix=None):
             print('slave'+ ID + ': I am too slow and the master has what it needs')
         
     server_process.terminate()
+    
 
-def main():
+if __name__ == '__main__':
+
+    configs = json.load(open('/centralized_scheduler/config.json'))
+    CHUNKS = configs['chunks'] 
+    # MASTER_ID = sys.argv[1]
+    # SLAVE_ID = sys.argv[2]
+
+    all_nodes = os.environ["ALL_NODES"].split(":")
+    all_nodes_ips = os.environ["ALL_NODES_IPS"].split(":")
+    node_dict = dict(zip(all_nodes, all_nodes_ips))
+
+
     if len(sys.argv) < 4:
         print('incorrect number of arguments')
         print('please provide id of the slave server, N/T to indicate transpose or not') 
@@ -280,6 +284,4 @@ def main():
     SLAVE_NUM = sys.argv[3]
     print("Master, ID, TP:", MASTER_ID, str(SLAVE_ID), SLAVE_NUM)
     matrixMulKernelSlave(MASTER_ID, str(SLAVE_ID), SLAVE_NUM)
-
-if __name__ == '__main__':
-    main()   
+    
