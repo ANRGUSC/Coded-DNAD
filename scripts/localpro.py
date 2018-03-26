@@ -1,11 +1,11 @@
 """
  * Copyright (c) 2017, Autonomous Networks Research Group. All rights reserved.
- *     contributors: 
+ *     contributors:
  *      Pranak Sakulkar, October 2017
  *      Jiatong Wang, October 2017
  *      Aleksandra Knezevic, October 2017
  *      Bhaskar Krishnamachari, October 2017
- *     Read license file in main directory for more details  
+ *     Read license file in main directory for more details
 """
 
 import zlib
@@ -55,6 +55,14 @@ def task(onefile, pathin, pathout):
         with open(os.path.join(pathout,num+'split_' + str(idx)), 'w') as f:
             for item in files_dict[idx]:
                 f.write("%s" % item)
+    return [os.path.join(pathout,num+'split_' + str(idx)) for idx in range(num_agg_points)]
+
+def main():
+    filelist= '25botnet.ipsum'
+    outpath = os.path.join(os.path.dirname(__file__), "generated_files/")
+    outfile = task(filelist, outpath, outpath)
+    return outfile
+
 
 if __name__ == '__main__':
 
