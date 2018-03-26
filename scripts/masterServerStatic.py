@@ -64,6 +64,7 @@ import signal
 
 configs = json.load(open('/centralized_scheduler/config.json'))
 encoding = np.array(configs['matrixConfigs']['encoding'])
+configs = json.load(open('/centralized_scheduler/config.json'))
 
 masterid = configs['taskname_map'][os.environ['TASK']][2] 
 
@@ -136,6 +137,7 @@ class MyFuncs:
         return self.slavePids
 
 class MasterServerProcess(multiprocessing.Process):
+    quit = False
     def __init__(self, myIP, myPortNum, token, ready):
         multiprocessing.Process.__init__(self)
         #self.setDaemon(True)
@@ -149,9 +151,20 @@ class MasterServerProcess(multiprocessing.Process):
         self.server.register_instance(myFuncs)
 
     def run(self):
-        self.server.serve_forever()
+        # self.server.serve_forever()
+        while not self.quit:
+            self.server.handle_request()
+
+    def stop_server(self):
+        self.quit = True
+        self.server.server_close()
+        print("here")
+
+        return 0
 
 def encode_matrix(matrix, encoding):
+    configs = json.load(open('/centralized_scheduler/config.json'))
+    masterid = configs['taskname_map'][os.environ['TASK']][2] 
     k, n = encoding.shape
     splits = np.array_split(matrix, k)
     encodeds = []
@@ -176,6 +189,8 @@ def encode_matrix(matrix, encoding):
     return encodeds   
    
 def encode_matrix_tp(matrix, encoding):
+    configs = json.load(open('/centralized_scheduler/config.json'))
+    masterid = configs['taskname_map'][os.environ['TASK']][2] 
     k, n = encoding.shape
     splits = np.array_split(matrix, k)
     encodeds = []
@@ -189,7 +204,7 @@ def encode_matrix_tp(matrix, encoding):
       slaveIP = node_dict['dftslave'+ str(masterid)+ str(idx)]
       np.savetxt(ptFile, encoded, fmt='%i')
       #cmd = "scp %s %s:%s" % (ptFile, slaveIP, ptFile) 
-      cmd = "sshpass -p 'zhifeng' scp -P 5000 -o StrictHostKeyChecking=no %s %s:%s" % (ptFile, slaveIP, ptFile) 
+      cmd = "sshpass -p 'PASSWORD' scp -P 5000 -o StrictHostKeyChecking=no %s %s:%s" % (ptFile, slaveIP, ptFile) 
       print("cmd:", cmd)  
       os.system(cmd)
 
@@ -253,6 +268,8 @@ def main():
 def matrixMulKernelMaster(iteration=0, matrix=None, execTimes=None):
     #np.random.seed(1351)
     configs = json.load(open('/centralized_scheduler/config.json'))
+    masterid = configs['taskname_map'][os.environ['TASK']][2] 
+
     #myIP = configs['masterConfigs']['IP']
     # TODO?? The IP is not correct is should be same as the service IP
     myIP = get_ip_address('eth0')
@@ -330,6 +347,7 @@ def matrixMulKernelMaster(iteration=0, matrix=None, execTimes=None):
 
     token.wait()
     productFileNames = localProxy.retrieve_products()
+    print(productFileNames)
     end_time = time.time()
     computeTime = end_time - start_time - communication_time
     start_time = end_time
@@ -357,6 +375,10 @@ def matrixMulKernelMaster(iteration=0, matrix=None, execTimes=None):
     decode_time = end_time - start_time
     
     localProxy.clear()
+
+    server_process.stop_server()
+    server_process.terminate()
+    print("Stop Server Called")
     #verify = matrix.dot(np.arange(dim*dim).reshape(dim,dim) + 1)
     #print 'verifying results, maximum of the element difference is', np.max(np.abs(result-verify))
     return result, computeTime, communication_time, decode_time
