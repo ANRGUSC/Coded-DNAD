@@ -10,8 +10,8 @@ fi
 echo "// Send TeraSort to every Worker"
 for (( i = 1; i <= $1; i++ ))
 do
-    scp ./TeraSort n$i:TeraSort/
-    scp ./CodedTeraSort n$i:TeraSort/
+    sshpass -p 'PASSWORD' scp -o StrictHostKeyChecking=no ./TeraSort n$i:TeraSort/
+    sshpass -p 'PASSWORD' scp -o StrictHostKeyChecking=no ./CodedTeraSort n$i:TeraSort/
 done
 
     

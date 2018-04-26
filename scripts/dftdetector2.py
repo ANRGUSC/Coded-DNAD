@@ -106,15 +106,18 @@ def task(filename, pathin, pathout):
     CHUNKS = configs['chunks']
     execTimes = configs['execTimes']
     k, n = encoding.shape
+    output = ""
     time.sleep(5)
-    X,ips,timestampS, timestampE = readFile(pathin+'/'+filename, NUM_BINS)
-    partitions = encode_matrix(X, encoding)
-    result, computeT, communicationT, decodeT = computeDFT(X, execTimes)
-    output = createOutput(result, ips, timestampS, timestampE)
+    try:
+        X,ips,timestampS, timestampE = readFile(pathin+'/'+filename, NUM_BINS)
+        partitions = encode_matrix(X, encoding)
+        result, computeT, communicationT, decodeT = computeDFT(X, execTimes)
+        output = createOutput(result, ips, timestampS, timestampE)
+    except Exception as e:
+        print("failed. details: " + str(e))        
     outFile = open(pathout + '/' + str(num) +  'anomalies_dft2.log', 'w')
     outFile.write(output)
     outFile.close()
-
     fileOut = pathout + '/' + str(num) +  'anomalies_dft2.log'
     return [fileOut]
 

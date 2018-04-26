@@ -15,7 +15,7 @@ host="localhost"
 for (( i = 1; i <= $1; i++ ))
 do
     host="$host,n$i"
-    scp ./TeraSort n$i:/root/TeraSort/
+    sshpass -p 'PASSWORD' scp -o StrictHostKeyChecking=no ./TeraSort n$i:/root/TeraSort/
 done
 
 
@@ -27,7 +27,7 @@ mpirun --allow-run-as-root -mca btl ^openib --mca btl_tcp_if_include eth0 --mca 
 
 for (( i = 1; i <= $1; i++ ))
 do
-    scp n$i:/root/TeraSort/Output/countIPs.txt ~/TeraSort   
+    sshpass -p 'PASSWORD' scp -o StrictHostKeyChecking=no n$i:/root/TeraSort/Output/countIPs.txt ~/TeraSort   
     cp countIPs.txt countIPs_$i.txt
     rm countIPs.txt
     cat countIPs_$i.txt >> tempOutput.txt
