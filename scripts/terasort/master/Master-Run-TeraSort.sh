@@ -22,7 +22,7 @@ done
 echo ""
 echo ""
 echo "// Run TeraSort"    
-mpirun --allow-run-as-root -mca btl ^openib --mca btl_tcp_if_include eth0 --mca oob_tcp_if_include eth0 -host $host --mca plm_rsh_no_tree_spawn 1 ./TeraSort
+mpirun -mca btl ^openib --mca btl_tcp_if_include eth0 --mca oob_tcp_if_include eth0 -host $host --mca plm_rsh_no_tree_spawn 1 ./TeraSort
 
 
 for (( i = 1; i <= $1; i++ ))

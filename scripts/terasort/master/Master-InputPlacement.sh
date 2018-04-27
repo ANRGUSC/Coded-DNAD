@@ -16,5 +16,5 @@ do
     sshpass -p 'PASSWORD' scp -o StrictHostKeyChecking=no ./InputPlacement n$i:TeraSort/
 done
 
-mpirun -mca btl ^openib --allow-run-as-root --mca btl_tcp_if_include eth0 --mca oob_tcp_if_include eth0 -host $host --mca plm_rsh_no_tree_spawn 1 ./InputPlacement
-mpirun -mca btl ^openib --allow-run-as-root --mca btl_tcp_if_include eth0 --mca oob_tcp_if_include eth0 -host $host --mca plm_rsh_no_tree_spawn 1 ./InputPlacement code
+mpirun -mca btl ^openib --mca btl_tcp_if_include eth0 --mca oob_tcp_if_include eth0 -host $host --mca plm_rsh_no_tree_spawn 1 ./InputPlacement
+mpirun -mca btl ^openib --mca btl_tcp_if_include eth0 --mca oob_tcp_if_include eth0 -host $host --mca plm_rsh_no_tree_spawn 1 ./InputPlacement code

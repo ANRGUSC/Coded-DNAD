@@ -23,7 +23,7 @@ g++ -std=c++11 filterResult.cpp -o filterResult
 
 sleep 30
 
-sh Master-Network.sh 3 ips.txt  # 3 is the number of workers
+bash Master-Network.sh 3 ips.txt  # 3 is the number of workers
                                # ips.txt lists the IP of the workers
 
 mkdir -p /root/TeraSort/Intermediate
