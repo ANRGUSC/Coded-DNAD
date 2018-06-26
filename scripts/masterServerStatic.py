@@ -61,6 +61,7 @@ import json
 import re
 import os
 import signal
+import paramiko
 
 configs = json.load(open('/centralized_scheduler/config.json'))
 encoding = np.array(configs['matrixConfigs']['encoding'])
@@ -168,7 +169,6 @@ def encode_matrix(matrix, encoding):
     k, n = encoding.shape
     splits = np.array_split(matrix, k)
     encodeds = []
-    configs = json.load(open('/centralized_scheduler/config.json'))
     print("Configs", configs)
     for idx in range(n):
       code = encoding[:, idx]
@@ -180,10 +180,39 @@ def encode_matrix(matrix, encoding):
       print("Slaves_IP", slaveIP)
       np.savetxt(ptFile, encoded, fmt='%i')
       #cmd = "scp %s %s:%s" % (ptFile, slaveIP, ptFile)
-      cmd = "sshpass -p 'PASSWORD' scp -P 5000 -o StrictHostKeyChecking=no %s %s:%s" % (ptFile, slaveIP, ptFile) 
-      print("cmd:", cmd)
-      os.system(cmd)
+      ssh = paramiko.SSHClient()
+      ssh.set_missing_host_key_policy(paramiko.AutoAddPolicy())
+      #Keep retrying in case the containers are still building/booting up o 
+      #the child nodes.
+      retry = 0
+      num_retries = 30
+      user = "root"
+      password = "PASSWORD"
+      ssh_port = 5000
+      while retry < num_retries:
+        try:
+            ssh.connect(slaveIP, username=user, password=password, port=ssh_port)
+            sftp = ssh.open_sftp()
+            sftp.put(ptFile, ptFile)
+            sftp.close()
+            break
+        except Exception as e:
+            print('SSH Connection refused or File transfer failed, will retry in 2 seconds')
+            print(e)
+            time.sleep(5)
+            retry += 1
 
+      ssh.close()
+
+      # while 1:
+      #   try:
+      #       cmd = "sshpass -p 'PASSWORD' scp -P 5000 -o StrictHostKeyChecking=no %s %s:%s" % (ptFile, slaveIP, ptFile) 
+      #       print("cmd:", cmd)
+      #       os.system(cmd)
+      #       break
+      #   except Exception as e:
+      #       print("Sending the file failed. Will retry again!!!")
+      #       print(e)
       encodeds.append(encoded)
     
     return encodeds   
@@ -204,9 +233,29 @@ def encode_matrix_tp(matrix, encoding):
       slaveIP = node_dict['dftslave'+ str(masterid)+ str(idx)]
       np.savetxt(ptFile, encoded, fmt='%i')
       #cmd = "scp %s %s:%s" % (ptFile, slaveIP, ptFile) 
-      cmd = "sshpass -p 'PASSWORD' scp -P 5000 -o StrictHostKeyChecking=no %s %s:%s" % (ptFile, slaveIP, ptFile) 
-      print("cmd:", cmd)  
-      os.system(cmd)
+      ssh = paramiko.SSHClient()
+      ssh.set_missing_host_key_policy(paramiko.AutoAddPolicy())
+      #Keep retrying in case the containers are still building/booting up o 
+      #the child nodes.
+      retry = 0
+      num_retries = 30
+      user = "root"
+      password = "PASSWORD"
+      ssh_port = 5000
+      while retry < num_retries:
+        try:
+            ssh.connect(slaveIP, username=user, password=password, port=ssh_port)
+            sftp = ssh.open_sftp()
+            sftp.put(ptFile, ptFile)
+            sftp.close()
+            break
+        except Exception as e:
+            print('SSH Connection refused or File transfer failed, will retry in 2 seconds')
+            print(e)
+            time.sleep(5)
+            retry += 1
+
+      ssh.close()
 
       encodeds.append(encoded)
     
@@ -340,7 +389,13 @@ def matrixMulKernelMaster(iteration=0, matrix=None, execTimes=None):
     # distribute the data
     for i in range(n):
       print(i)
-      slaves[i].accept_matrix(chunks_rows[i], chunks_lengths[i], chunks_replicas[i])
+      while True:
+        try:
+            slaves[i].accept_matrix(chunks_rows[i], chunks_lengths[i], chunks_replicas[i])
+            break
+        except Exception as e:
+            print("getting matrix Failed. Will retry again!!!")
+            print(e)
     for i in range(n): 
         slaves[i].start()
     communication_time += time.time() - c_time
