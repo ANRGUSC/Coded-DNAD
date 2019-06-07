@@ -117,14 +117,18 @@ def task(filename, pathin, pathout):
     except Exception as e:
         print("failed. details: " + str(e))
 
+    print(pathin)
+    print(pathout)
     outFile = open(pathout + '/' + str(num) +  'anomalies_dft0.log', 'w')
     outFile.write(output)
+    print(outFile)
     outFile.close()
     fileOut = pathout + '/' + str(num) +  'anomalies_dft0.log'
     return [fileOut]
 
 def main():
 
+    print('Testing --------------')
     filelist = '25merged_file0.ipsum'
     outpath = os.path.join(os.path.dirname(__file__), "generated_files/")
     outfile = task(filelist, outpath, outpath)
@@ -132,6 +136,7 @@ def main():
 
 
 def alt_main():
+    print('Testing --------------2')
     task('25botnet.ipsum', '.', './output.out')
 
 if __name__ == '__main__':

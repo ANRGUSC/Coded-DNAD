@@ -63,6 +63,7 @@ import os
 import signal
 import paramiko
 
+
 configs = json.load(open('/centralized_scheduler/config.json'))
 encoding = np.array(configs['matrixConfigs']['encoding'])
 configs = json.load(open('/centralized_scheduler/config.json'))
@@ -104,6 +105,7 @@ class MyFuncs:
  
     def slave_ready(self, slaveID):
         print("slave_ready")
+        print(slaveID)
         self.readyCount += 1
         print("slave %s is ready" % (slaveID))
         if self.readyCount >= READY_SLAVES_NEEDED:
@@ -162,6 +164,8 @@ class MasterServerProcess(multiprocessing.Process):
         print("here")
 
         return 0
+
+        
 
 def encode_matrix(matrix, encoding):
     configs = json.load(open('/centralized_scheduler/config.json'))
@@ -310,14 +314,18 @@ def generateReplicasAndSpeeds(means):
     #replicas = means
     speeds = 1.0 / np.array(replicas)
     return replicas, speeds
-             
+           
 def main():
     matrixMulKernelMaster()
+    
 
 def matrixMulKernelMaster(iteration=0, matrix=None, execTimes=None):
     #np.random.seed(1351)
+    #monitor OUTPUT in this process
+
     configs = json.load(open('/centralized_scheduler/config.json'))
     masterid = configs['taskname_map'][os.environ['TASK']][2] 
+
 
     #myIP = configs['masterConfigs']['IP']
     # TODO?? The IP is not correct is should be same as the service IP
@@ -342,13 +350,18 @@ def matrixMulKernelMaster(iteration=0, matrix=None, execTimes=None):
             print(slave)
             slaves.append(xmlrpclib.ServerProxy('http://' + slave, allow_none=True))
 
+
+        print(myIP)
+        print(myPortNum)
         localProxy = xmlrpclib.ServerProxy('http://' + myIP + ':' + myPortNum, allow_none=True)
         
    
         if matrix is None: 
+            print('Matrix is none')
             dim = configs['matrixConfigs']['dimension']
             matrix = np.random.rand(dim,dim)
         else:
+            print('Matrix not None')
             dim = matrix.shape[0]
         #encodeds = encode_matrix(matrix, encoding)
         
@@ -374,8 +387,9 @@ def matrixMulKernelMaster(iteration=0, matrix=None, execTimes=None):
 
     for chunk in range(chunks): 
         #ui = getSlaveSpeeds()
+        # print(chunk)
         replicas, ui = generateReplicasAndSpeeds(execTimes)
-        print(replicas)
+        # print(replicas)
         rows_slave = np.array(rows)
         rows_slave = rows_slave + (chunk * (dim/k)/chunks)
         print(rows_slave, lengths)
@@ -417,12 +431,13 @@ def matrixMulKernelMaster(iteration=0, matrix=None, execTimes=None):
         if len(products[slave].shape) < 2:
             products[slave] = products[slave].reshape(products[slave].shape[0], 1)
 
-    #for i in s:
-    #    print('releasing %d' % i)
-    #    c_time = time.time()
-    #    slaves[i-1].release()
-    #    communication_time += time.time() - c_time
+    for i in s:
+       print('releasing %d' % i)
+       c_time = time.time()
+       slaves[i-1].release()
+       communication_time += time.time() - c_time
     
+    # print('--------------?????????????????????????????4')
     lookup = {}
     #result = decode_products(products, dim, k, n)
     result = decode_products_generic(encoding, lookup, products, dim, k, n)
@@ -437,6 +452,7 @@ def matrixMulKernelMaster(iteration=0, matrix=None, execTimes=None):
     #verify = matrix.dot(np.arange(dim*dim).reshape(dim,dim) + 1)
     #print 'verifying results, maximum of the element difference is', np.max(np.abs(result-verify))
     return result, computeTime, communication_time, decode_time
+
 
 if __name__ == '__main__':
     main()
